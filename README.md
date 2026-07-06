@@ -152,21 +152,4 @@ output, the app is working.
 
 ---
 
-## Citation
 
-If you use this app, please cite both backend tools it depends on:
-
-**CoPPIs** (builds the interactome used in the Network Analysis tab):
-
-> Lomagno A, Yusuf I, Tosadori G, Bonanomi D, Mauri PL, Di Silvestre D.
-> CoPPIs algorithm: a tool to unravel protein cooperative strategies in
-> pathophysiological conditions. *Briefings in Bioinformatics*. 2025;26(2):bbaf146.
-> https://doi.org/10.1093/bib/bbaf146
-
-**PiProteline** (the preprocessing / stats / network backend):
-
-> No paper yet — please cite the software directly:
-> Lomagno A, Hamed S, Yusuf I, Mauri PL, Di Silvestre D. *PiProteline* [R package]. https://github.com/lomi95/PiProteline
-
-The proteomics data used in the associated study are available from the
-PRIDE repository under accession **PXD033168**.

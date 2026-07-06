@@ -1,12 +1,9 @@
-# quantitative_analysis_tab.R (v2) --------------------------------------------
-# Changes vs v1:
-#  * FIX #2: the three hardcoded volcano buttons (Group1 vs Group2, ...) and the
-#    two hardcoded pairwise-MDS buttons are replaced by dropdowns populated from
-#    the ACTUAL results. Works for any number of groups (2..n), not just 3.
-#  * FIX #4: quantitative_analysis() runs on data_norm with gene_column = 1.
-#    The gene column is column 1 of data_norm after preprocessing, so this is
-#    correct and no longer depends on a mutable/clobbered shared value.
-#  * Already correct in v1 and kept: it consumes preproc_data, not raw data.
+# quantitative_analysis_tab.R --------------------------------------------------
+# Runs PiProteline::quantitative_analysis() on the already-preprocessed data
+# (never on the raw upload). The volcano and pairwise-MDS pickers are built
+# from the actual result names, so this works for any number of groups (2..n),
+# not just a fixed set. The gene column is always column 1 of data_norm, since
+# preprocessing_data() reorders it there.
 
 library(shiny)
 library(DT)
@@ -39,8 +36,6 @@ quantitative_analysis_ui <- function() {
         actionButton("show_mds_pairwise", "Show pairwise MDS")
       ),
       mainPanel(
-        verbatimTextOutput("qa_debug"),
-
         conditionalPanel("input.show_manova > 0",
                          DTOutput("manova_table"),
                          downloadButton("download_manova", "Download MANOVA Results")),
@@ -105,15 +100,6 @@ quantitative_analysis_server <- function(input, output, session, shared_data) {
         qa_result(NULL)
       })
     })
-  })
-
-  output$qa_debug <- renderPrint({
-    if (is.null(qa_result())) return("No analysis yet.")
-    list(
-      result_elements = names(qa_result()),
-      volcano_keys    = contrast_labels(qa_result()$volcano_plots,  shared_data$group_names),
-      pairwise_keys   = contrast_labels(qa_result()$mds_plot_pairw, shared_data$group_names)
-    )
   })
 
   output$manova_table <- renderDT({ req(qa_result()); qa_result()$manova_results })

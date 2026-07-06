@@ -31,7 +31,7 @@ BiocManager::install(c("ggtree", "ggtreeExtra"))
 # PiProteline backend and CoPPIs interactome
 install.packages("remotes")
 remotes::install_github("lomi95/PiProteline")
-remotes::install_github("lomi95/CoPPIs")   # adjust the owner/repo if different
+remotes::install_github("lomi95/CoPPIs")
 
 # Shiny app dependencies
 install.packages(c(
@@ -89,6 +89,10 @@ Rules:
 * **Groups are read from the sample column names.** You type the group tags
   (e.g. `Control,Treated`) and the app finds every column whose name contains
   that tag. So `Control_1`, `Control_2`, ... all belong to group `Control`.
+  ⚠️ Because matching is by substring, avoid group names where one is
+  contained inside another (e.g. `A` and `AB`, or `WT` and `WT2`) — a column
+  like `AB_1` would then match *both* `A` and `AB`. Use tags that are clearly
+  distinct, e.g. `Ctrl` / `Treat` instead of `A` / `AB`.
 
 ### Reserved words (important)
 
@@ -150,10 +154,19 @@ output, the app is working.
 
 ## Citation
 
-If you use this app, please cite the PiProteline and CoPPIs packages and the
-associated publication. The proteomics data used in the associated study are
-available from the PRIDE repository under accession **PXD033168**.
+If you use this app, please cite both backend tools it depends on:
 
-```
-<add the paper reference and package DOIs here>
-```
+**CoPPIs** (builds the interactome used in the Network Analysis tab):
+
+> Lomagno A, Yusuf I, Tosadori G, Bonanomi D, Mauri PL, Di Silvestre D.
+> CoPPIs algorithm: a tool to unravel protein cooperative strategies in
+> pathophysiological conditions. *Briefings in Bioinformatics*. 2025;26(2):bbaf146.
+> https://doi.org/10.1093/bib/bbaf146
+
+**PiProteline** (the preprocessing / stats / network backend):
+
+> No paper yet — please cite the software directly:
+> Lomagno A, Hamed S, Yusuf I, Mauri PL, Di Silvestre D. *PiProteline* [R package]. https://github.com/lomi95/PiProteline
+
+The proteomics data used in the associated study are available from the
+PRIDE repository under accession **PXD033168**.

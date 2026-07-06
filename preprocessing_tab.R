@@ -1,11 +1,11 @@
-# preprocessing_tab.R (v2) -----------------------------------------------------
-# Changes vs v1:
-#  * FIX #4: the user's chosen gene column is stored ONCE in `gene_column_raw`
-#    and is never overwritten. v1 clobbered it with colnames(data_norm)[1] right
-#    after preprocessing, so by the time other tabs read it, it was wrong.
-#  * The chosen normalization (`norm_type`) is now stored in shared_data so the
-#    rest of the app uses the SAME normalization the user selected here
-#    (part of FIX #3 — no tab silently falls back to a different default).
+# preprocessing_tab.R ----------------------------------------------------------
+# Upload + preprocessing step. Two choices made here are stored in shared_data
+# and used unchanged by every other tab:
+#  * `gene_column_raw` — the gene/protein ID column the user picked. Stored
+#    once and never overwritten, so later tabs don't silently use the wrong
+#    column.
+#  * `norm_type` — the normalization the user picked, so every downstream
+#    step uses the same one (no tab falls back to a different default).
 
 library(shiny)
 library(DT)
@@ -48,7 +48,6 @@ preprocessing_ui <- function() {
         actionButton("show_desc_stats_row", "Show DS_row")
       ),
       mainPanel(
-        verbatimTextOutput("debug_output"),
         conditionalPanel("input.show_data_unique > 0",
                          h4("data_unique"), DTOutput("data_unique_table"),
                          downloadButton("download_data_unique","Download")),
@@ -78,8 +77,6 @@ preprocessing_server <- function(input, output, session) {
     quant_results   = NULL,   # filled by the quantitative tab (shared)
     pipelineResults = NULL    # filled by the network tab (shared)
   )
-
-  output$debug_output <- renderText(paste("Temp dir:", tempdir()))
 
   # Hold the uploaded file so we can re-read it when the chosen sheet changes.
   upload <- reactiveValues(path = NULL, ext = NULL, sheets = NULL)

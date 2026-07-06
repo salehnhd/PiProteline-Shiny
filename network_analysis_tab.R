@@ -1,23 +1,19 @@
-# network_analysis_tab.R (v2) -------------------------------------------------
-# Changes vs v1:
-#  * FIX #3 (main): this tab NO LONGER calls PiProteline::pipeline() on the raw
-#    upload. pipeline() always re-runs preprocessing internally with its own
-#    default normalization (TotSigNorm) and gene_column = 1, throwing away the
-#    Preprocessing tab's work and ignoring the user's choices. Instead we call
-#    the same downstream steps pipeline() calls, but on the ALREADY-preprocessed
-#    object (shared_data$preproc_data). Nothing is recomputed; the user's
-#    normalization and gene-column choices are respected end to end.
-#  * FIX #4: because we consume preproc_data, the gene column is column 1 of the
-#    normalized/grouped tables (the backend reorders it). We never pass a raw
-#    gene_column = 1 against raw data again. This mirrors pipeline()'s internals.
-#  * FIX #2: the Group dropdowns are populated from shared_data$group_names, so
-#    the tab works for ANY dataset / any number of groups (not just PSM_C/PD/PG).
-#  * FIX #1: LEFT AS-IS by request. The interactome is still built from the
-#    lab's own published CoPPIs package; this is justified in the README.
+# network_analysis_tab.R -------------------------------------------------------
+# Runs network + functional analysis on the ALREADY-preprocessed data
+# (shared_data$preproc_data), not on the raw upload. This matters because
+# PiProteline::pipeline() re-runs preprocessing internally with its own
+# defaults (TotSigNorm, gene_column = 1), which would silently ignore
+# whatever normalization/gene-column the user picked in the Preprocessing
+# tab. Instead this tab replicates pipeline()'s downstream steps directly, so
+# nothing is recomputed and the user's choices carry through end to end. The
+# gene column is column 1 of the preprocessed tables (PiProteline reorders it
+# there), matching what pipeline() does internally.
+# The Group dropdowns are populated from shared_data$group_names, so this
+# works for any dataset with any number of groups.
 
 library(shiny)
 library(shinyWidgets)
-library(CoPPIs)        # FIX #1 left as-is: our own published package (see README)
+library(CoPPIs)        # builds the interactome (see README for citation)
 library(igraph)
 library(dplyr)
 library(PiProteline)
@@ -58,7 +54,6 @@ network_analysis_ui <- function() {
         actionButton("na_plot_ppi_correlations", "Show PPI_correlations")
       ),
       mainPanel(
-        verbatimTextOutput("na_debug"),
         h4(textOutput("na_table_title")),
         DTOutput("na_table"),
         downloadButton("na_table_dl", "Download CSV"),
@@ -73,7 +68,7 @@ network_analysis_ui <- function() {
 
 network_analysis_server <- function(input, output, session, shared_data) {
 
-  # FIX #2: keep all three Group selectors in sync with the real group names.
+  # Keep all three Group selectors in sync with the real group names.
   observe({
     req(shared_data$group_names)
     for (id in c("na_cent_group", "na_cn_group", "na_ppi_group")) {
@@ -105,6 +100,11 @@ network_analysis_server <- function(input, output, session, shared_data) {
             names_of_groups     = shared_data$group_names,
             gene_column         = 1,                    # gene col = column 1 of data_norm
             data_grouped_full   = pp$data_grouped_full,
+            # `significance_manova` is defined in the Quantitative Analysis
+            # tab's UI, not this tab's. It works because Shiny's `input` is
+            # shared across the whole app (all tabs get the same `input`
+            # object from app.R), but it means this tab depends on that one
+            # still existing there.
             significance_manova = input$significance_manova %||% 0.05
           )
         }
@@ -222,16 +222,4 @@ network_analysis_server <- function(input, output, session, shared_data) {
   }
   observeEvent(input$na_plot_ppi_unweighted,   { plot_ppi("PPI_unweighted")   })
   observeEvent(input$na_plot_ppi_correlations, { plot_ppi("PPI_correlations") })
-
-  output$na_debug <- renderPrint({
-    list(
-      have_preproc  = !is.null(shared_data$preproc_data),
-      have_pipeline = !is.null(shared_data$pipelineResults),
-      groups        = shared_data$group_names %||% NA,
-      cent_group    = input$na_cent_group %||% NA,
-      cn_scope      = input$na_cn_scope %||% NA,
-      cn_group      = input$na_cn_group %||% NA,
-      ppi_group     = input$na_ppi_group %||% NA
-    )
-  })
 }

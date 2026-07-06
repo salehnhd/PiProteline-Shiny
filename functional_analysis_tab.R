@@ -63,8 +63,6 @@ functional_analysis_ui <- function() {
         actionButton("btn_plot_singleProfile", "Show singleProfile plot")
       ),
       mainPanel(
-        verbatimTextOutput("fa_debug"),
-        
         h4(textOutput("fa_title")),
         plotOutput("fa_plot_single", height = 500),
         downloadButton("fa_plot_single_dl", "Download PNG"),
@@ -90,15 +88,9 @@ functional_analysis_ui <- function() {
 
 functional_analysis_server <- function(input, output, session, shared_data) {
   
-  
-  get_path <- function(x, path) {
-    out <- x
-    for (nm in path) {
-      if (is.null(out) || is.null(out[[nm]])) return(NULL)
-      out <- out[[nm]]
-    }
-    out
-  }
+  # Note: get_path() is defined once in helpers.R and sourced before this
+  # file (see app.R), so it's already available here - no need to redefine it.
+
   extract_drawable <- function(x) {
     if (is.null(x)) return(NULL)
     if (inherits(x, c("gg","ggplot"))) return(x)
@@ -251,15 +243,6 @@ functional_analysis_server <- function(input, output, session, shared_data) {
     cats <- list_categories(node)
     output$fa_cat_ui <- renderUI({ selectInput("fa_cat", "Category", choices = cats, selected = cats[1]) })
   }, ignoreInit = TRUE)
-  
-  
-  output$fa_debug <- renderPrint({
-    list(
-      have_pipeline = !is.null(shared_data$pipelineResults),
-      manova_key    = input$fa_key %||% NA,
-      manova_cat    = input$fa_cat %||% NA
-    )
-  })
   
   
   output$fa_title <- renderText({
